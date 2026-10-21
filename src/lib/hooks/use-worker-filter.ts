@@ -12,11 +12,13 @@ type WorkerResponse =
       type: "FILTER_RESULT";
       requestId: number;
       items: Item[];
+      workerFilterMs: number;
     };
 
 export function useWorkerFilter(items: Item[], filters: ItemFilters) {
   const workerRef = useRef<Worker | null>(null);
   const requestIdRef = useRef(0);
+  const requestStartedAtRef = useRef(0);
 
   const [filteredItems, setFilteredItems] = useState<Item[]>(items);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -40,6 +42,15 @@ export function useWorkerFilter(items: Item[], filters: ItemFilters) {
       if (message.requestId !== requestIdRef.current) {
         return;
       }
+
+      const roundTripMs = performance.now() - requestStartedAtRef.current;
+
+      console.table({
+        itemCount: items.length,
+        matchingCount: message.items.length,
+        workerFilterMs: Number(message.workerFilterMs.toFixed(2)),
+        roundTripMs: Number(roundTripMs.toFixed(2)),
+      });
 
       setFilteredItems(message.items);
       setIsUpdating(false);
@@ -71,7 +82,7 @@ export function useWorkerFilter(items: Item[], filters: ItemFilters) {
     const requestId = ++requestIdRef.current;
 
     setIsUpdating(true);
-
+    requestStartedAtRef.current = performance.now();
     worker.postMessage({
       type: "FILTER",
       requestId,

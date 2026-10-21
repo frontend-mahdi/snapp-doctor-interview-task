@@ -22,6 +22,7 @@ type WorkerResponse =
       type: "FILTER_RESULT";
       requestId: number;
       items: Item[];
+      workerFilterMs: number;
     };
 
 let allItems: Item[] = [];
@@ -41,12 +42,17 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   }
 
   if (message.type === "FILTER") {
+    const start = performance.now();
+
     const filtered = filterItems(allItems, message.filters);
+
+    const workerFilterMs = performance.now() - start;
 
     const response: WorkerResponse = {
       type: "FILTER_RESULT",
       requestId: message.requestId,
       items: filtered,
+      workerFilterMs,
     };
 
     self.postMessage(response);
