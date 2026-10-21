@@ -14,7 +14,7 @@ export default function Home() {
   const [items] = useState(() => generateItems(DEFAULT_ITEM_COUNT));
   const [filters, setFilters] = useState<ItemFilters>(DEFAULT_FILTERS);
 
-  const { filteredItems, isUpdating } = useWorkerFilter(items, filters);
+  const { filteredIndices, isUpdating } = useWorkerFilter(items, filters);
 
   function updateFilter<K extends keyof ItemFilters>(
     key: K,
@@ -155,11 +155,11 @@ export default function Home() {
             >
               {isUpdating
                 ? "Updating results..."
-                : `${filteredItems.length.toLocaleString()} matching items`}
+                : `${filteredIndices.length.toLocaleString()} matching items`}
             </p>
           </div>
 
-          <VirtualizedList items={filteredItems} />
+          <VirtualizedList items={items} indices={filteredIndices} />
         </section>
       </div>
     </main>

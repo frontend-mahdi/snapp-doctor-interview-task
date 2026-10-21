@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -5,13 +6,11 @@ import type { ItemFilters } from "@/lib/data/filters";
 import type { Item } from "@/lib/data/item";
 
 type WorkerResponse =
-  | {
-      type: "READY";
-    }
+  | { type: "READY" }
   | {
       type: "FILTER_RESULT";
       requestId: number;
-      items: Item[];
+      indices: Uint32Array;
       workerFilterMs: number;
     };
 
@@ -20,8 +19,10 @@ export function useWorkerFilter(items: Item[], filters: ItemFilters) {
   const requestIdRef = useRef(0);
   const requestStartedAtRef = useRef(0);
 
-  const [filteredItems, setFilteredItems] = useState<Item[]>(items);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [filteredIndices, setFilteredIndices] = useState<Uint32Array>(
+    () => new Uint32Array(0),
+  );
+  const [isUpdating, setIsUpdating] = useState(true);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -39,20 +40,18 @@ export function useWorkerFilter(items: Item[], filters: ItemFilters) {
         return;
       }
 
-      if (message.requestId !== requestIdRef.current) {
-        return;
-      }
+      if (message.requestId !== requestIdRef.current) return;
 
       const roundTripMs = performance.now() - requestStartedAtRef.current;
 
       console.table({
         itemCount: items.length,
-        matchingCount: message.items.length,
+        matchingCount: message.indices.length,
         workerFilterMs: Number(message.workerFilterMs.toFixed(2)),
         roundTripMs: Number(roundTripMs.toFixed(2)),
       });
 
-      setFilteredItems(message.items);
+      setFilteredIndices(message.indices);
       setIsUpdating(false);
     };
 
@@ -61,10 +60,7 @@ export function useWorkerFilter(items: Item[], filters: ItemFilters) {
       setIsUpdating(false);
     };
 
-    worker.postMessage({
-      type: "INIT",
-      items,
-    });
+    worker.postMessage({ type: "INIT", items });
 
     return () => {
       worker.terminate();
@@ -75,23 +71,15 @@ export function useWorkerFilter(items: Item[], filters: ItemFilters) {
   useEffect(() => {
     const worker = workerRef.current;
 
-    if (!worker || !isReady) {
-      return;
-    }
+    if (!worker || !isReady) return;
 
     const requestId = ++requestIdRef.current;
 
     setIsUpdating(true);
     requestStartedAtRef.current = performance.now();
-    worker.postMessage({
-      type: "FILTER",
-      requestId,
-      filters,
-    });
+
+    worker.postMessage({ type: "FILTER", requestId, filters });
   }, [filters, isReady]);
 
-  return {
-    filteredItems,
-    isUpdating,
-  };
+  return { filteredIndices, isUpdating };
 }
