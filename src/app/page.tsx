@@ -1,30 +1,20 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useState } from "react";
 import {
   CATEGORIES,
   DEFAULT_ITEM_COUNT,
   generateItems,
 } from "@/lib/data/generate-items";
-import {
-  DEFAULT_FILTERS,
-  filterItems,
-  type ItemFilters,
-} from "@/lib/data/filters";
+import { DEFAULT_FILTERS, type ItemFilters } from "@/lib/data/filters";
 import VirtualizedList from "@/components/virtualized-list";
+import { useWorkerFilter } from "@/lib/hooks/use-worker-filter";
 
 export default function Home() {
   const [items] = useState(() => generateItems(DEFAULT_ITEM_COUNT));
   const [filters, setFilters] = useState<ItemFilters>(DEFAULT_FILTERS);
 
-  const deferredFilters = useDeferredValue(filters);
-
-  const isUpdating = filters !== deferredFilters;
-
-  const filteredItems = useMemo(
-    () => filterItems(items, deferredFilters),
-    [items, deferredFilters],
-  );
+  const { filteredItems, isUpdating } = useWorkerFilter(items, filters);
 
   function updateFilter<K extends keyof ItemFilters>(
     key: K,

@@ -1,7 +1,7 @@
 
 import type { Item } from "./item";
 
-export const DEFAULT_ITEM_COUNT = 100_000;
+export const DEFAULT_ITEM_COUNT = 1_000_000;
 export const DEFAULT_SEED = 42;
 
 export const CATEGORIES = [
