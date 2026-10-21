@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -12,8 +11,7 @@ import {
   filterItems,
   type ItemFilters,
 } from "@/lib/data/filters";
-
-const PREVIEW_LIMIT = 50;
+import VirtualizedList from "@/components/virtualized-list";
 
 export default function Home() {
   const [items] = useState(() => generateItems(DEFAULT_ITEM_COUNT));
@@ -23,8 +21,6 @@ export default function Home() {
     () => filterItems(items, filters),
     [items, filters],
   );
-
-  const visibleItems = filteredItems.slice(0, PREVIEW_LIMIT);
 
   function updateFilter<K extends keyof ItemFilters>(
     key: K,
@@ -44,9 +40,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 sm:px-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <header>
-          <h1 className="text-2xl font-bold">
-            Search & Filter
-          </h1>
+          <h1 className="text-2xl font-bold">Search & Filter</h1>
           <p className="mt-2 text-sm text-gray-600">
             Search and filter 100,000 mock products.
           </p>
@@ -58,29 +52,21 @@ export default function Home() {
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
-              <label
-                htmlFor="search"
-                className="block text-sm font-medium"
-              >
+              <label htmlFor="search" className="block text-sm font-medium">
                 Search by name
               </label>
               <input
                 id="search"
                 type="search"
                 value={filters.query}
-                onChange={(event) =>
-                  updateFilter("query", event.target.value)
-                }
+                onChange={(event) => updateFilter("query", event.target.value)}
                 placeholder="e.g. laptop"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium"
-              >
+              <label htmlFor="category" className="block text-sm font-medium">
                 Category
               </label>
               <select
@@ -101,10 +87,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium"
-              >
+              <label htmlFor="status" className="block text-sm font-medium">
                 Status
               </label>
               <select
@@ -125,10 +108,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="min-price"
-                className="block text-sm font-medium"
-              >
+              <label htmlFor="min-price" className="block text-sm font-medium">
                 Minimum price
               </label>
               <input
@@ -137,20 +117,14 @@ export default function Home() {
                 min={0}
                 value={filters.minPrice}
                 onChange={(event) =>
-                  updateFilter(
-                    "minPrice",
-                    Number(event.target.value),
-                  )
+                  updateFilter("minPrice", Number(event.target.value))
                 }
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="max-price"
-                className="block text-sm font-medium"
-              >
+              <label htmlFor="max-price" className="block text-sm font-medium">
                 Maximum price
               </label>
               <input
@@ -159,10 +133,7 @@ export default function Home() {
                 min={0}
                 value={filters.maxPrice}
                 onChange={(event) =>
-                  updateFilter(
-                    "maxPrice",
-                    Number(event.target.value),
-                  )
+                  updateFilter("maxPrice", Number(event.target.value))
                 }
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
               />
@@ -182,62 +153,14 @@ export default function Home() {
 
         <section aria-label="Search results" className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">
-              Results
-            </h2>
-            <p
-              aria-live="polite"
-              className="text-sm text-gray-600"
-            >
+            <h2 className="text-lg font-semibold">Results</h2>
+
+            <p aria-live="polite" className="text-sm text-gray-600">
               {filteredItems.length.toLocaleString()} matching items
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-            <div className="grid grid-cols-[60px_minmax(0,1fr)_minmax(100px,0.7fr)_100px_100px] gap-3 border-b bg-gray-100 px-4 py-3 text-xs font-semibold text-gray-600">
-              <span>ID</span>
-              <span>Name</span>
-              <span>Category</span>
-              <span>Price</span>
-              <span>Status</span>
-            </div>
-
-            {visibleItems.length > 0 ? (
-              visibleItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="grid grid-cols-[60px_minmax(0,1fr)_minmax(100px,0.7fr)_100px_100px] gap-3 border-b border-gray-100 px-4 py-3 text-sm last:border-b-0"
-                >
-                  <span className="text-gray-500">{item.id}</span>
-                  <span className="truncate font-medium">
-                    {item.name}
-                  </span>
-                  <span className="truncate">{item.category}</span>
-                  <span>{item.price.toLocaleString()}</span>
-                  <span
-                    className={
-                      item.status === "active"
-                        ? "font-medium text-green-700"
-                        : "font-medium text-gray-500"
-                    }
-                  >
-                    {item.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="px-4 py-12 text-center text-sm text-gray-500">
-                No matching items found.
-              </p>
-            )}
-          </div>
-
-          {filteredItems.length > PREVIEW_LIMIT && (
-            <p className="text-sm text-gray-500">
-              Showing the first {PREVIEW_LIMIT} results.
-              Virtualized scrolling will be implemented in the next task.
-            </p>
-          )}
+          <VirtualizedList items={filteredItems} />
         </section>
       </div>
     </main>
