@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
   CATEGORIES,
   DEFAULT_ITEM_COUNT,
@@ -17,9 +17,13 @@ export default function Home() {
   const [items] = useState(() => generateItems(DEFAULT_ITEM_COUNT));
   const [filters, setFilters] = useState<ItemFilters>(DEFAULT_FILTERS);
 
+  const deferredFilters = useDeferredValue(filters);
+
+  const isUpdating = filters !== deferredFilters;
+
   const filteredItems = useMemo(
-    () => filterItems(items, filters),
-    [items, filters],
+    () => filterItems(items, deferredFilters),
+    [items, deferredFilters],
   );
 
   function updateFilter<K extends keyof ItemFilters>(
@@ -154,9 +158,14 @@ export default function Home() {
         <section aria-label="Search results" className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">Results</h2>
-
-            <p aria-live="polite" className="text-sm text-gray-600">
-              {filteredItems.length.toLocaleString()} matching items
+            <p
+              aria-live="polite"
+              className="text-sm text-gray-600"
+              aria-busy={isUpdating}
+            >
+              {isUpdating
+                ? "Updating results..."
+                : `${filteredItems.length.toLocaleString()} matching items`}
             </p>
           </div>
 
