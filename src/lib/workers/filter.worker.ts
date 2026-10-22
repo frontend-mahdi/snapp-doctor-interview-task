@@ -1,15 +1,6 @@
-
 import { filterItemIndices } from "@/lib/data/filters";
 import type { ItemFilters } from "@/lib/data/filters";
 import type { Item } from "@/lib/data/item";
-
-const workerScope = self as unknown as {
-  onmessage: ((event: MessageEvent<WorkerRequest>) => void) | null;
-  postMessage: (
-    message: unknown,
-    options?: StructuredSerializeOptions,
-  ) => void;
-};
 
 type WorkerRequest =
   | { type: "INIT"; items: Item[] }
@@ -24,13 +15,21 @@ type WorkerResponse =
       workerFilterMs: number;
     };
 
+const workerScope = self as unknown as {
+  onmessage: ((event: MessageEvent<WorkerRequest>) => void) | null;
+  postMessage: (message: unknown, options?: StructuredSerializeOptions) => void;
+};
+
 let allItems: Item[] = [];
+let normalizedNames: string[] = [];
 
 workerScope.onmessage = (event: MessageEvent<WorkerRequest>) => {
-      const message = event.data;
+  const message = event.data;
 
   if (message.type === "INIT") {
     allItems = message.items;
+    normalizedNames = allItems.map((item) => item.name.toLowerCase());
+
     const response: WorkerResponse = { type: "READY" };
     workerScope.postMessage(response);
     return;
@@ -38,16 +37,20 @@ workerScope.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
   if (message.type === "FILTER") {
     const start = performance.now();
-    const indices = filterItemIndices(allItems, message.filters);
-    const workerFilterMs = performance.now() - start;
 
+    const indices = filterItemIndices(
+      allItems,
+      message.filters,
+      normalizedNames,
+    );
+
+    const workerFilterMs = performance.now() - start;
     const buffer = indices.buffer;
 
     if (!(buffer instanceof ArrayBuffer)) {
       throw new Error("Expected indices to use an ArrayBuffer");
     }
 
-    // Create a view over the same buffer; no additional data copy.
     const transferableIndices = new Uint32Array(
       buffer,
       indices.byteOffset,
@@ -61,6 +64,6 @@ workerScope.onmessage = (event: MessageEvent<WorkerRequest>) => {
       workerFilterMs,
     };
 
-workerScope.postMessage(response, { transfer: [buffer] });
+    workerScope.postMessage(response, { transfer: [buffer] });
   }
 };

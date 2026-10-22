@@ -16,13 +16,25 @@ export const DEFAULT_FILTERS: ItemFilters = {
   status: "all",
 };
 
-function matchesItem(item: Item, filters: ItemFilters, query: string): boolean {
-  if (query && !item.name.toLowerCase().includes(query)) return false;
-  if (filters.category !== "all" && item.category !== filters.category)
+function matchesItem(
+  item: Item,
+  filters: ItemFilters,
+  query: string,
+  normalizedName = item.name.toLowerCase(),
+): boolean {
+  if (query && !normalizedName.includes(query)) return false;
+
+  if (filters.category !== "all" && item.category !== filters.category) {
     return false;
-  if (item.price < filters.minPrice || item.price > filters.maxPrice)
+  }
+
+  if (item.price < filters.minPrice || item.price > filters.maxPrice) {
     return false;
-  if (filters.status !== "all" && item.status !== filters.status) return false;
+  }
+
+  if (filters.status !== "all" && item.status !== filters.status) {
+    return false;
+  }
 
   return true;
 }
@@ -41,6 +53,7 @@ export function filterItems(
 export function filterItemIndices(
   items: readonly Item[],
   filters: ItemFilters,
+  normalizedNames?: readonly string[],
 ): Uint32Array {
   if (filters.minPrice > filters.maxPrice) {
     return new Uint32Array(0);
@@ -51,7 +64,7 @@ export function filterItemIndices(
   let count = 0;
 
   for (let index = 0; index < items.length; index++) {
-    if (matchesItem(items[index]!, filters, query)) {
+    if (matchesItem(items[index]!, filters, query, normalizedNames?.[index])) {
       indices[count++] = index;
     }
   }
