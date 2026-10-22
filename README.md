@@ -53,11 +53,12 @@ npm run build
 npm start
 ```
 
-### Tests
+### Tests and Validation
 
 ```bash
 npm test
 npx tsc --noEmit
+npm run lint
 npm run build
 ```
 
@@ -116,13 +117,24 @@ These are local stress-test measurements, not universal performance guarantees. 
 - Virtualization reduces the number of DOM elements rendered at once; it does not eliminate filtering or result-mapping costs.
 - Caching normalized names reduces repeated string conversions at the cost of additional memory.
 - The current benchmark measures execution and response timings, not total application memory usage or complete interaction latency.
+- Search and scrolling responsiveness were checked manually. React rendering duration, browser paint time, and actual heap consumption were not independently benchmarked.
+
+## Learning Notes
+
+I documented my understanding of the technical decisions, performance trade-offs, testing approach, and lessons learned while completing this task.
+
+**[Read my learning notes](https://docs.google.com/document/d/1xg28iA0V0cl06iBgvVW54ndW8DEliO0dG4qOw1KIv3g/edit?usp=sharing)**
 
 ## AI Usage
 
-AI assistance was used for implementation planning, debugging, test design, and performance optimization. The implementation was tested locally, and the reported measurements were collected during browser and Node.js testing.
+AI assistance was used for implementation planning, debugging, test design, and performance optimization. Suggestions were validated through code review, automated tests, TypeScript checks, production builds, and manual browser testing. Performance measurements were collected during Node.js and browser experiments.
+
+The final implementation and its trade-offs should be understood and explainable by the author.
 
 ## Project Status
 
 The application implements client-side search and combined filtering, Web Worker execution, stale-response protection, transferable result indices, cached normalized names, virtualized rendering, and unit tests.
 
 The default dataset size is 100,000 items. A dataset of 1,000,000 items was also used for local performance stress testing.
+
+**Live Demo:** https://snapp-doctor-interview-task.vercel.app/
